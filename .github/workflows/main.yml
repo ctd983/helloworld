@@ -6,4 +6,5 @@ job:
   say-hello:
     runs-on: ubuntu-latest
     steps:
-      - run: echo hello world
+      - name: Run a one-line script
+        run: echo hello world
