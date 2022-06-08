@@ -1,10 +1,33 @@
 name: hello-world
-on:
+on: #when this workflow will run
   push:
+    paths:
+      #- '!README.md'     #> no run this workflow when README.md have edit
+      #- '!docs/*'        #> no run this workflow when any files in docs have edit
+      #- '!docs/**'       #> no run this workflow when any directory & files in docs have edit
+      #- '**.js'          #> run this workflow with any js file have edit
     branches: [main]
+      #- 'main'         #> run in only main branch
+      #- 'release/**'   #> run in release branch
+      #- '!dev/**'      #> dont run in dev branch
 jobs:
-  say-hello:
+  continuous-deployment:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "TODAY=$(date +%y-%m-%d)" >> $GITHUB_ENV
-      - run: echo hello world, today is $TODAY
+      #- run: echo "TODAY=$(date +%y-%m-%d)" >> $GITHUB_ENV
+      #- run: echo hello world, today is $TODAY
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      #Step 2
+      - name: Create CodeDeploy Deployment
+        id: deploy
+        run: |
+          aws deploy create-deployment \
+            --application-name Git_Application \
+            --deployment-group-name development_gropup \
+            --deployment-config-name CodeDeployDefault.OneAtATime \
+            --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
